@@ -24,7 +24,7 @@ export async function POST(request) {
         const result = notesDb.createNote(title.trim(), content.trim())
 
         if (result.changes > 0) {
-            const newNote = notesDb.getNotesById(result.lastInsertRowid)
+            const newNote = notesDb.getNoteById(result.lastInsertRowid)
             return NextResponse.json(newNote, {status: 201})
         } else {
             return NextResponse.json({error: "Failed to create note"}, {status: 500})
