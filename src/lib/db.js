@@ -9,6 +9,8 @@ export function getDataBase() {
 
         db = new Database(dbPath)
         db.pragma("journal_mode = WAL")
+
+        // Note table
         db.exec(`
             CREATE TABLE IF NOT EXISTS notes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,6 +20,18 @@ export function getDataBase() {
                 updateAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `)
+
+        // User table
+        db.exec(`
+            CREATE TABLE IF NOT EXIST users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                createAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            )
+        `)
+
         console.log("Data base initialized successful")
     }
 
@@ -43,7 +57,7 @@ export const notesDb = {
     },
 
     // Update a note ---------------------------------------- U
-    updateNote(id, title, content){
+    updateNote(id, title, content) {
         const db = getDataBase()
         const stmt = db.prepare(`
             UPDATE notes 
@@ -82,4 +96,29 @@ export const notesDb = {
         return stmt.run(id)
     },
 
+}
+
+// User Database -----------------------------------------------------------
+
+export const userDb = {
+    // Create a user ---------------------------------------------- C
+    createUser(email, hashedPassword, name) {
+        const db = getDataBase()
+        const stmt = db.prepare(`
+            INSERT INTO users (email, hashed_pass, name, createAt)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            `)
+        return stmt.run(email, hashedPassword, name)
+    },
+
+    // Read database---------------------------------------------- R
+    getUserByEmail(email) {
+        const db = getDataBase()
+        return db.prepare("SELECT * FROM users email = ?").get(email)
+    },
+
+    getUserById(id) {
+        const db = getDataBase()
+        return db.prepare(`SELECT * FROM users WHERE id = ?`).get(id)
+    }
 }
