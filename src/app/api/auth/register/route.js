@@ -13,8 +13,15 @@ export async function POST(request) {
         if (password.length < 6) {
             return NextResponse.json({error: "Password must be at least 6 characters"}, { status: 400 })
         }
+
+        const existingUser = await userDb.getUserByEmail(email)
+        if (existingUser) {
+            return NextResponse.json({error: "Email already used"}, { status: 401 })
+        }
+
+        await userDb.createUser(email, password, name)
         
-        return NextResponse.json({message: "User initialized successful"})
+        return NextResponse.json({email: email, name: name, message: "User created successfuly"}, { status: 200 })
 
     } catch (error) {
         console.error("Registration failed:", error)

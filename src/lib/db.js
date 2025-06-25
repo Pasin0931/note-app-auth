@@ -23,12 +23,12 @@ export function getDataBase() {
 
         // User table
         db.exec(`
-            CREATE TABLE IF NOT EXIST users (
+            CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL,
                 password TEXT NOT NULL,
                 name TEXT NOT NULL,
-                createAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                createAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `)
 
@@ -105,7 +105,7 @@ export const userDb = {
     createUser(email, hashedPassword, name) {
         const db = getDataBase()
         const stmt = db.prepare(`
-            INSERT INTO users (email, hashed_pass, name, createAt)
+            INSERT INTO users (email, password, name, createAt)
             VALUES (?, ?, ?, CURRENT_TIMESTAMP)
             `)
         return stmt.run(email, hashedPassword, name)
@@ -114,7 +114,7 @@ export const userDb = {
     // Read database---------------------------------------------- R
     getUserByEmail(email) {
         const db = getDataBase()
-        return db.prepare("SELECT * FROM users email = ?").get(email)
+        return db.prepare("SELECT * FROM users WHERE email = ?").get(email)
     },
 
     getUserById(id) {
