@@ -16,8 +16,10 @@ export function getDataBase() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 content TEXT,
+                user_id INTEGER NOT NULL,
                 createAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updateAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                updateAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
             )
         `)
 
@@ -48,12 +50,12 @@ export function closeDataBase() {
 export const notesDb = {
 
     // Create a new Note ----------------------------------- C
-    createNote(title, content = "") {
+    createNote(title, content = "", userId) {
         const db = getDataBase()
-        const stmt = db.prepare(`INSERT INTO notes (title, content, createAt, updateAt)
-            VALUES(?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`)
+        const stmt = db.prepare(`INSERT INTO notes (title, content, user_id, createAt, updateAt)
+            VALUES(?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`)
 
-        return stmt.run(title, content)
+        return stmt.run(title, content, userId)
     },
 
     // Update a note ---------------------------------------- U
@@ -70,15 +72,15 @@ export const notesDb = {
     // Read a note ------------------------------------------- R
 
     // Get all notes
-    getAllNotes() {
+    getAllNotes(userId) {
         const db = getDataBase()
-        return db.prepare("SELECT * FROM notes ORDER BY updateAt DESC").all()
+        return db.prepare("SELECT * FROM notes WHERE user_id = ? ORDER BY updateAt DESC").all(userId)
     },
 
     // Get by Id
-    getNoteById(id) {
+    getNoteById(id, userId) {
         const db = getDataBase()
-        return db.prepare("SELECT * FROM notes WHERE id = ?").get(id)
+        return db.prepare("SELECT * FROM notes WHERE id = ? AND user_id = ?").get(id, userId)
     },
 
     searchNote(query) {
