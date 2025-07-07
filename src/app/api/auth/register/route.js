@@ -26,7 +26,7 @@ export async function POST(request) {
         if (res.changes > 0) {
             // Gennerate JWT token
             const token = gennerateToken({
-                userID: res.lastInsertRowid,
+                userId: res.lastInsertRowid,
                 email: email,
                 name
             })

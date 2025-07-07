@@ -51,10 +51,10 @@ export const notesDb = {
 
     // Create a new Note ----------------------------------- C
     createNote(title, content = "", userId) {
+        console.log(userId)
         const db = getDataBase()
         const stmt = db.prepare(`INSERT INTO notes (title, content, user_id, createAt, updateAt)
             VALUES(?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`)
-
         return stmt.run(title, content, userId)
     },
 
