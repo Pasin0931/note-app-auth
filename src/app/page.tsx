@@ -33,15 +33,31 @@ export default function NotesApp() {
   const [newNote, setNewNote] = useState({ title: "", content: "" })
 
   const [user, setUser] = useState<UserData | null>(null)
-  const [token, setToken] = useState<UserData | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token")
+    const storedUser = localStorage.getItem("user")
+
+    if (storedToken && storedUser) {
+      setToken(storedToken)
+      setUser(JSON.parse(storedUser))
+    } else {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     fetchNotes()
   }, [])
 
-  const handleAuth = (authToken: string, userData: any) => {
-    // setToken(authToken)
+  const handleAuthSuccess = (authToken: string, userData: any) => {
+    setToken(authToken)
     setUser(userData)
+
+    localStorage.setItem("token", authToken)
+    localStorage.setItem("user", JSON.stringify(userData))
+
     setLoading(false)
   }
 
@@ -134,6 +150,10 @@ export default function NotesApp() {
     )
   }
 
+  if (!user || !token) {
+    return <AuthForm onAuthSuccess={handleAuthSuccess}/>
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
 
@@ -151,7 +171,6 @@ export default function NotesApp() {
 
         {/* ------------------------------------------------------------------------------------------- */}
 
-        <AuthForm/>
         {isCreating && (
           <Card className="mb-6">
             <CardHeader>
