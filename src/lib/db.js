@@ -59,14 +59,14 @@ export const notesDb = {
     },
 
     // Update a note ---------------------------------------- U
-    updateNote(id, title, content) {
+    updateNote(id, title, content, userId) {
         const db = getDataBase()
         const stmt = db.prepare(`
             UPDATE notes 
             SET title = ?, content = ?, updateAt = CURRENT_TIMESTAMP 
-            WHERE id = ?
+            WHERE id = ? AND user_id = ?
             `)
-        return stmt.run(title, content, id)
+        return stmt.run(title, content, id, userId)
     },
 
     // Read a note ------------------------------------------- R
@@ -83,19 +83,19 @@ export const notesDb = {
         return db.prepare("SELECT * FROM notes WHERE id = ? AND user_id = ?").get(id, userId)
     },
 
-    searchNote(query) {
+    searchNote(query, userId) {
         const db = getDataBase()
         return db.prepare(`
             SELECT * FROM notes
-            WHERE title LIKE ? OR content LIKE ?
-            ORDER BY updateAt DESC`).all(`%${query}`, `%${query}`)
+            WHERE title LIKE ? OR content LIKE ?) AND user_id=?
+            ORDER BY updateAt DESC`).all(`%${query}`, `%${query}`, userId)
     },
 
     // Delete a note ------------------------------------------ D
-    deleteNote(id) {
+    deleteNote(id, userId) {
         const db = getDataBase()
-        const stmt = db.prepare("DELETE FROM notes WHERE id=?")
-        return stmt.run(id)
+        const stmt = db.prepare("DELETE FROM notes WHERE id=? AND user_id = ?")
+        return stmt.run(id, userId)
     },
 
 }

@@ -17,7 +17,7 @@ export async function POST(request) {
 
         const existingUser = await userDb.getUserByEmail(email)
         if (existingUser) {
-            return NextResponse.json({ error: "Email already used" }, { status: 401 })
+            return NextResponse.json({ error: "Email already used" }, { status: 409 })
         }
 
         const hashedPassword = hashPassword(password)

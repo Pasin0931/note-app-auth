@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, X } from "lucide-react"
+import { Plus, Edit, Trash2, Save, X, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { error } from "console"
 import { title } from "process"
@@ -39,7 +39,11 @@ export default function NotesApp() {
     const storedToken = localStorage.getItem("token")
     const storedUser = localStorage.getItem("user")
 
-    if (storedToken && storedUser) {
+    console.log("User -> ",storedUser)
+    console.log("Token ->", storedToken)
+
+    if (storedToken && storedUser && storedUser !== "undefined" && storedToken !== undefined) {
+      console.log("-----------------")
       setToken(storedToken)
       setUser(JSON.parse(storedUser))
     } else {
@@ -48,8 +52,10 @@ export default function NotesApp() {
   }, [])
 
   useEffect(() => {
-    fetchNotes()
-  }, [])
+    if (token && user) {
+      fetchNotes()
+    }
+  }, [token, user])
 
   const handleAuthSuccess = (authToken: string, userData: any) => {
     setToken(authToken)
@@ -61,11 +67,28 @@ export default function NotesApp() {
     setLoading(false)
   }
 
+  const handleLogout = () => {
+
+    if (!confirm("Do you want to logout ?")) return
+
+    setToken(null)
+    setUser(null)
+    setNotes([])
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+  }
+
   const fetchNotes = async () => {
     try {
-      const response = await fetch("/api/notes")
-      const data = await response.json()
-      setNotes(data)
+      const response = await fetch("/api/notes", { headers: { Authorization: `Bearer ${token}` } })
+
+      if (response.ok) {
+        const data = await response.json()
+        setNotes(data)
+      } else if (response.status === 401) {
+        handleLogout()
+      }
+
     } catch (error) {
       console.error("Error fetching notes:", error)
     } finally {
@@ -79,7 +102,7 @@ export default function NotesApp() {
     try {
       const response = await fetch("/api/notes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(newNote)
       })
 
@@ -87,6 +110,8 @@ export default function NotesApp() {
         setNewNote({ title: "", content: "" })
         setIsCreating(false)
         fetchNotes()
+      } else if (response.status === 401) {
+        handleLogout()
       }
     } catch (error) {
       console.error("Error creating note:", error)
@@ -107,7 +132,7 @@ export default function NotesApp() {
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`},
         body: JSON.stringify(editNote)
       })
 
@@ -115,6 +140,8 @@ export default function NotesApp() {
         setEditingId(null)
         setEditNote({ title: "", content: "" })
         fetchNotes()
+      } else if (response.status === 401) {
+        handleLogout()
       }
     } catch (error) {
       console.log("Error updating note:", error)
@@ -126,9 +153,7 @@ export default function NotesApp() {
       if (!confirm("Do you want to delete this note ?")) {
         return console.log("Canceled deleting note")
       }
-      const response = await fetch(`/api/notes/${id}`, {
-        method: "DELETE"
-      })
+      const response = await fetch(`/api/notes/${id}`, {method: "DELETE", headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`}})
 
       if (response.ok) {
         fetchNotes()
@@ -151,7 +176,7 @@ export default function NotesApp() {
   }
 
   if (!user || !token) {
-    return <AuthForm onAuthSuccess={handleAuthSuccess}/>
+    return <AuthForm onAuthSuccess={handleAuthSuccess} />
   }
 
   return (
@@ -163,10 +188,23 @@ export default function NotesApp() {
             <h1 className="text-3xl font-bold text-gray-900">My Notes</h1>
             <p className="text-gray-600 mt-1">Organized your thoughts and ideas</p>
           </div>
-          <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            New Note
-          </Button>
+          <div className="flex items-center gap-4">
+
+            <div className="flex item-center gap-2 text-sm text-gray-600">
+              <LogOut className="w-4 h-4" />
+              {user.email}
+            </div>
+
+            <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              New Note
+            </Button>
+            <Button variant={"outline"} onClick={handleLogout} className="flex items-center gap-2 bd-transparent">
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+
+          </div>
         </div>
 
         {/* ------------------------------------------------------------------------------------------- */}
@@ -211,7 +249,7 @@ export default function NotesApp() {
         {/* ------------------------------------------------------------------------------------------- */}
 
         {/* Note Grid */}
-        {/* <div className="grid gap-4 md: grid-cols lg:grid-cols-3">
+        <div className="grid gap-4 md: grid-cols lg:grid-cols-3">
           {notes.map((notes) => (
             <Card key={notes.id} className="h-fit">
               <CardHeader className="pb-3">
@@ -288,7 +326,7 @@ export default function NotesApp() {
             <p className="text-gray-600 mb-4">Get started by creating your first note !</p>
             <Button onClick={() => setIsCreating(true)}>Create your first note</Button>
           </div>
-        )} */}
+        )}
 
       </div>
     </div>
