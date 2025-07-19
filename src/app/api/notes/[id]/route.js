@@ -5,7 +5,7 @@ import { getUserFromRequest } from "@/lib/auth"
 export async function GET(request, { params }) {
     try {
 
-        const { id } = params
+        const { id } = await params
         const note = await notesDb.getNoteById(id)
 
         if (!note) {

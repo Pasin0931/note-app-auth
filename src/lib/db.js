@@ -83,11 +83,11 @@ export const notesDb = {
         return db.prepare("SELECT * FROM notes WHERE id = ? AND user_id = ?").get(id, userId)
     },
 
-    searchNote(query, userId) {
+    searchNotes(query, userId) {
         const db = getDataBase()
         return db.prepare(`
             SELECT * FROM notes
-            WHERE title LIKE ? OR content LIKE ?) AND user_id=?
+            WHERE (title LIKE ? OR content LIKE ?) AND user_id=?
             ORDER BY updateAt DESC`).all(`%${query}`, `%${query}`, userId)
     },
 
